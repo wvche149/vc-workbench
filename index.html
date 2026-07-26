@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="V.C的工作台">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#e8ecf1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2374b9ff'/><text x='50' y='68' font-size='52' font-weight='800' fill='white' text-anchor='middle' font-family='sans-serif'>VC</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2374b9ff'/><text x='50' y='68' font-size='52' font-weight='800' fill='white' text-anchor='middle' font-family='sans-serif'>VC</text></svg>">
+<title>V.C的工作台</title>
+<style>
+:root {
+  --bg: #f8f9fa;
+  --sidebar: #e8ecf1;
+  --sidebar-hover: #dce1e8;
+  --sidebar-active: #c8d6e5;
+  --sidebar-text: #5a6c7d;
+  --sidebar-text-active: #2c3e50;
+  --card: #ffffff;
+  --text: #2d3436;
+  --text-secondary: #7f8c8d;
+  --accent: #fd9a8b;
+  --accent2: #55d6b4;
+  --accent3: #74b9ff;
+  --accent4: #a29bfe;
+  --border: #e0e4e8;
+  --shadow: 0 2px 12px rgba(0,0,0,0.04);
+  --radius: 12px;
+  --transition: all 0.25s ease;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 72px;
+  background: var(--sidebar);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  gap: 4px;
+  flex-shrink: 0;
+  z-index: 10;
+  border-right: 1px solid var(--border);
+}
+.sidebar-logo {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, #74b9ff, #a29bfe);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+.sidebar-btn {
+  width: 60px;
+  height: auto;
+  min-height: 52px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 22px;
+  transition: var(--transition);
+  color: var(--sidebar-text);
+  padding: 6px 4px;
+}
+.sidebar-btn:hover { background: var(--sidebar-hover); color: var(--sidebar-text-active); }
+.sidebar-btn.active { background: var(--sidebar-active); color: var(--sidebar-text-active); }
+.sidebar-btn.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: var(--accent3);
+  border-radius: 0 3px 3px 0;
+}
+.sidebar-btn .label {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+.sidebar-spacer { flex: 1; }
+
+/* Main */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.header {
+  height: 60px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.header-title { font-size: 18px; font-weight: 700; }
+.header-date { color: var(--text-secondary); font-size: 14px; margin-left: auto; }
+.header-weather { font-size: 14px; color: var(--text-secondary); }
+
+/* Content */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+}
+.page { display: none; }
+.page.active { display: block; }
+
+/* Cards */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.card-title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.card-title .icon { font-size: 20px; }
+
+/* Grid */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+/* Buttons */
+.btn {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primary { background: var(--accent3); color: #fff; }
+.btn-primary:hover { background: #5aa8e8; }
+.btn-success { background: var(--accent2); color: #fff; }
+.btn-success:hover { background: #3dc9a0; }
+.btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+.btn-outline:hover { border-color: var(--accent3); color: var(--accent3); }
+.btn-sm { padding: 4px 12px; font-size: 12px; }
+.btn-danger { background: var(--accent); color: #fff; }
+.btn-danger:hover { background: #f3816e; }
+
+/* Inputs */
+input, textarea, select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: var(--transition);
+  background: #fafafa;
+  resize: vertical;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent3);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(9,132,227,0.1);
+}
+textarea { min-height: 80px; }
+
+/* Word Card */
+.word-card {
+  background: linear-gradient(135deg, #a29bfe, #dfe6fd);
+  color: #2d3436;
+  border-radius: var(--radius);
+  padding: 28px;
+  text-align: center;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.3s;
+}
+.word-card:hover { transform: scale(1.02); }
+.word-card .word { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+.word-card .phonetic { font-size: 14px; opacity: 0.6; margin-bottom: 12px; }
+.word-card .meaning { font-size: 16px; opacity: 0.85; }
+.word-card .example { font-size: 13px; opacity: 0.6; margin-top: 8px; font-style: italic; }
+.word-card .hint { font-size: 12px; opacity: 0.4; margin-top: 16px; }
+
+/* AI Correction */
+.correction-block {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 12px;
+}
+.correction-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.correction-label {
+  font-weight: 700;
+  color: var(--accent3);
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+/* Book List */
+.book-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+  transition: var(--transition);
+}
+.book-item:hover { border-color: var(--accent3); box-shadow: var(--shadow); }
+.book-cover {
+  width: 60px;
+  height: 80px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--accent4), #dfe6fd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.book-info { flex: 1; }
+.book-title { font-weight: 700; margin-bottom: 4px; }
+.book-author { color: var(--text-secondary); font-size: 13px; margin-bottom: 8px; }
+.progress-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.progress-fill { height: 100%; background: var(--accent3); border-radius: 3px; transition: width 0.3s; }
+.progress-text { font-size: 11px; color: var(--text-secondary); }
+
+/* Todo */
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.todo-item:last-child { border-bottom: none; }
+.todo-check {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+.todo-check.done { background: var(--accent2); border-color: var(--accent2); }
+.todo-check.done::after { content: '✓'; color: #fff; font-size: 12px; font-weight: 700; }
+.todo-text { flex: 1; font-size: 14px; }
+.todo-text.done { text-decoration: line-through; color: var(--text-secondary); }
+.todo-delete { color: #ccc; cursor: pointer; font-size: 16px; padding: 4px; }
+.todo-delete:hover { color: var(--accent); }
+
+/* Stats */
+.stat-card {
+  text-align: center;
+  padding: 20px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.stat-value { font-size: 28px; font-weight: 800; color: var(--accent3); }
+.stat-label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+/* Finance Calculator */
+.calc-display {
+  background: #e8ecf1;
+  color: #2d3436;
+  font-size: 28px;
+  font-weight: 700;
+  padding: 16px 20px;
+  border-radius: 10px;
+  text-align: right;
+  font-family: 'SF Mono', 'Cascadia Code', monospace;
+  margin-bottom: 12px;
+  min-height: 60px;
+}
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.calc-btn {
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  background: #e9ecef;
+  color: var(--text);
+}
+.calc-btn:hover { background: #dee2e6; }
+.calc-btn.op { background: var(--accent3); color: #fff; }
+.calc-btn.op:hover { background: #5aa8e8; }
+.calc-btn.eq { background: var(--accent2); color: #fff; }
+.calc-btn.eq:hover { background: #3dc9a0; }
+.calc-btn.clear { background: var(--accent); color: #fff; }
+.calc-btn.clear:hover { background: #f3816e; }
+
+/* Daily Report */
+.report-section { margin-bottom: 20px; }
+.report-section h3 { font-size: 15px; margin-bottom: 10px; color: var(--accent3); }
+.report-section textarea { min-height: 100px; }
+
+/* Listening */
+.listening-item {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.listening-item:hover { border-color: var(--accent3); background: #f8f9ff; }
+.listening-icon { font-size: 28px; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--accent2);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  z-index: 999;
+  animation: slideIn 0.3s ease, slideOut 0.3s ease 1.7s forwards;
+  box-shadow: 0 4px 20px rgba(0,184,148,0.3);
+}
+@keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.modal {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 440px;
+  max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.modal h3 { margin-bottom: 16px; }
+.modal .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
+/* Tabs */
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; background: #f0f0f0; border-radius: 10px; padding: 4px; }
+.tab-btn {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: var(--transition);
+  color: var(--text-secondary);
+}
+.tab-btn.active { background: #fff; color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+/* Empty State */
+.empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+.empty .icon { font-size: 48px; margin-bottom: 12px; }
+
+/* Fitness */
+.fitness-record {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+.fitness-record:last-child { border-bottom: none; }
+.fitness-icon { font-size: 24px; flex-shrink: 0; }
+.fitness-info { flex: 1; }
+.fitness-info .type { font-weight: 700; }
+.fitness-info .meta { color: var(--text-secondary); font-size: 12px; }
+.fitness-record .delete { color: #ccc; cursor: pointer; }
+.fitness-record .delete:hover { color: var(--accent); }
+
+/* Copy Card */
+.copy-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: var(--transition);
+  position: relative;
+}
+.copy-card:hover { border-color: var(--accent3); box-shadow: var(--shadow); }
+.copy-card .copy-tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.copy-card .copy-tag.xhs { background: #ffe8e4; color: #fd9a8b; }
+.copy-card .copy-tag.xy { background: #e4f0ff; color: #74b9ff; }
+.copy-card .copy-title { font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+.copy-card .copy-body {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+.copy-card .copy-actions { display: flex; gap: 8px; }
+.copy-btn {
+  padding: 4px 14px;
+  border: 1.5px solid var(--accent3);
+  background: transparent;
+  color: var(--accent3);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+.copy-btn:hover { background: var(--accent3); color: #fff; }
+.copy-btn.copied { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+
+@media (max-width: 768px) {
+  .grid2, .grid3 { grid-template-columns: 1fr; }
+  .sidebar { width: 56px; }
+  .sidebar-btn { width: 40px; height: 40px; font-size: 18px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-logo">V.C</div>
+  <button class="sidebar-btn active" data-page="english" title="英语学习"><span>📖</span><span class="label">英语</span></button>
+  <button class="sidebar-btn" data-page="reading" title="阅读"><span>📚</span><span class="label">阅读</span></button>
+  <button class="sidebar-btn" data-page="finance" title="财务工作"><span>💰</span><span class="label">财务</span></button>
+  <button class="sidebar-btn" data-page="report" title="日报复盘"><span>📝</span><span class="label">日报</span></button>
+  <button class="sidebar-btn" data-page="fitness" title="运动健身"><span>🏃</span><span class="label">运动</span></button>
+  <button class="sidebar-btn" data-page="sidehustle" title="副业文案"><span>📱</span><span class="label">副业</span></button>
+  <div class="sidebar-spacer"></div>
+  <button class="sidebar-btn" onclick="exportAllData()" title="导出数据"><span>💾</span><span class="label">导出</span></button>
+</nav>
+
+<!-- Main -->
+<div class="main">
+  <header class="header">
+    <div class="header-title" id="pageTitle">V.C的工作台</div>
+    <div class="header-weather" id="greeting"></div>
+    <div class="header-date" id="headerDate"></div>
+  </header>
+
+  <div class="content">
+
+    <!-- ==================== 英语学习 ==================== -->
+    <div class="page active" id="page-english">
+      <div class="tabs">
+        <button class="tab-btn active" data-sub="english-words">每日单词</button>
+        <button class="tab-btn" data-sub="english-ai">AI 纠错</button>
+        <button class="tab-btn" data-sub="english-listen">听力训练</button>
+      </div>
+
+      <!-- 每日单词 -->
+      <div class="sub-page active" id="sub-english-words">
+        <div class="grid2">
+          <div>
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title"><span class="icon">🎯</span>今日单词</span>
+                <span id="wordProgress" style="font-size:13px;color:var(--text-secondary)"></span>
+              </div>
+              <div class="word-card" id="wordCard" onclick="flipWord()">
+                <div class="word" id="wordText">initiative</div>
+                <div class="phonetic" id="wordPhonetic">/ɪˈnɪʃətɪv/</div>
+                <div class="meaning" id="wordMeaning">n. 主动性，倡议</div>
+                <div class="example" id="wordExample">"She took the initiative to organize the meeting."</div>
+                <div class="hint">👆 点击翻转查看释义</div>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:12px;">
+                <button class="btn btn-outline btn-sm" onclick="prevWord()">⬅ 上一个</button>
+                <button class="btn btn-outline btn-sm" onclick="nextWord()">下一个 ➡</button>
+                <button class="btn btn-success btn-sm" onclick="markWordLearned()" style="margin-left:auto">✓ 已掌握</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-header"><span class="card-title"><span class="icon">📊</span>学习统计</span></div>
+              <div class="grid2">
+                <div class="stat-card"><div class="stat-value" id="statTotal">0</div><div class="stat-label">总词汇</div></div>
+                <div class="stat-card"><div class="stat-value" id="statLearned">0</div><div class="stat-label">已掌握</div></div>
+                <div class="stat-card"><div class="stat-value" id="statToday">0</div><div class="stat-label">今日学习</div></div>
+                <div class="stat-card"><div class="stat-value" id="statStreak">0</div><div class="stat-label">连续天数</div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title"><span class="icon">➕</span>添加单词</span></div>
+              <input type="text" id="newWordEn" placeholder="英文单词" style="margin-bottom:8px">
+              <input type="text" id="newWordZh" placeholder="中文释义" style="margin-bottom:8px">
+              <input type="text" id="newWordEx" placeholder="例句（可选）">
+              <button class="btn btn-primary" onclick="addWord()" style="margin-top:8px;width:100%">添加单词</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI 纠错 -->
+      <div class="sub-page" id="sub-english-ai">
+        <div class="card">
+          <div class="card-header"><span class="card-title"><span class="icon">🤖</span>AI 英语纠错</span></div>
+          <textarea id="aiInput" placeholder="输入你想练习的英文句子...&#10;例如：I go to meeting yesterday and discuss about budget."></textarea>
+          <button class="btn btn-primary" onclick="correctEnglish()" style="margin-top:10px">🔍 检查纠错</button>
+          <div id="aiResult" style="margin-top:12px;"></div>
+        </div>
+      </div>
+
+      <!-- 听力训练 -->
+      <div class="sub-page" id="sub-english-listen">
+        <div class="card">
+          <div class="card-header"><span class="card-title"><span class="icon">🎧</span>听力训练材料</span></div>
+          <div id="listeningList"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title"><span class="icon">✏️</span>听写练习</span></div>
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">
+            播放一段音频后，在下方写下你听到的内容，然后点击"核对"对比原文。
+          </p>
+          <textarea id="dictationInput" placeholder="写下你听到的内容..."></textarea>
+          <div style="display:flex;gap:10px;margin-top:10px;">
+            <button class="btn btn-outline" onclick="showDictationAnswer()">📋 显示原文</button>
+            <button class="btn btn-primary" onclick="checkDictation()">✅ 核对</button>
+          </div>
+          <div id="dictationResult" style="margin-top:12px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 阅读 ==================== -->
+    <div class="page" id="page-reading">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <span style="font-weight:700;font-size:16px;">📚 我的书架</span>
+        <button class="btn btn-primary btn-sm" onclick="showAddBook()">+ 添加书籍</button>
+      </div>
+      <div id="bookList"></div>
+    </div>
+
+    <!-- ==================== 财务工作 ==================== -->
+    <div class="page" id="page-finance">
+      <div class="tabs">
+        <button class="tab-btn active" data-sub="finance-calc">计算器</button>
+        <button class="tab-btn" data-sub="finance-todo">待办清单</button>
+        <button class="tab-btn" data-sub="finance-data">数据看板</button>
+      </div>
+
+      <!-- 计算器 -->
+      <div class="sub-page active" id="sub-finance-calc">
+        <div class="grid2">
+          <div class="card">
+            <div class="card-header"><span class="card-title"><span class="icon">🧮</span>计算器</span></div>
+            <div class="calc-display" id="calcDisplay">0</div>
+            <div class="calc-grid">
+              <button class="calc-btn clear" onclick="calcClear()">C</button>
+              <button class="calc-btn op" onclick="calcInput('(')">(</button>
+              <button class="calc-btn op" onclick="calcInput(')')">)</button>
+              <button class="calc-btn op" onclick="calcInput('/')">÷</button>
+              <button class="calc-btn" onclick="calcInput('7')">7</button>
+              <button class="calc-btn" onclick="calcInput('8')">8</button>
+              <button class="calc-btn" onclick="calcInput('9')">9</button>
+              <button class="calc-btn op" onclick="calcInput('*')">×</button>
+              <button class="calc-btn" onclick="calcInput('4')">4</button>
+              <button class="calc-btn" onclick="calcInput('5')">5</button>
+              <button class="calc-btn" onclick="calcInput('6')">6</button>
+              <button class="calc-btn op" onclick="calcInput('-')">−</button>
+              <button class="calc-btn" onclick="calcInput('1')">1</button>
+              <button class="calc-btn" onclick="calcInput('2')">2</button>
+              <button class="calc-btn" onclick="calcInput('3')">3</button>
+              <button class="calc-btn op" onclick="calcInput('+')">+</button>
+              <button class="calc-btn" onclick="calcInput('0')" style="grid-column:span 2">0</button>
+              <button class="calc-btn" onclick="calcInput('.')">.</button>
+              <button class="calc-btn eq" onclick="calcEval()">=</button>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-header"><span class="card-title"><span class="icon">🏨</span>酒店财务快捷计算</span></div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div><label style="font-size:12px;color:var(--text-secondary)">RevPAR 计算</label>
+                  <div style="display:flex;gap:8px;">
+                    <input type="number" id="revparRev" placeholder="总收入" style="flex:1">
+                    <input type="number" id="revparRooms" placeholder="可用房间数" style="flex:1">
+                  </div>
+                  <button class="btn btn-outline btn-sm" onclick="calcRevPAR()" style="margin-top:6px;width:100%">计算 RevPAR</button>
+                  <div id="revparResult" style="font-weight:700;margin-top:6px;text-align:center;"></div>
+                </div>
+                <div style="margin-top:8px;">
+                  <label style="font-size:12px;color:var(--text-secondary)">GOP 利润率</label>
+                  <div style="display:flex;gap:8px;">
+                    <input type="number" id="gopRevenue" placeholder="总收入" style="flex:1">
+                    <input type="number" id="gopCost" placeholder="运营成本" style="flex:1">
+                  </div>
+                  <button class="btn btn-outline btn-sm" onclick="calcGOP()" style="margin-top:6px;width:100%">计算 GOP 率</button>
+                  <div id="gopResult" style="font-weight:700;margin-top:6px;text-align:center;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 待办清单 -->
+      <div class="sub-page" id="sub-finance-todo">
+        <div class="card">
+          <div class="card-header"><span class="card-title"><span class="icon">✅</span>财务待办</span></div>
+          <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <input type="text" id="todoInput" placeholder="添加待办事项..." onkeydown="if(event.key==='Enter')addTodo()">
+            <button class="btn btn-primary" onclick="addTodo()">添加</button>
+          </div>
+          <div id="todoList"></div>
+        </div>
+      </div>
+
+      <!-- 数据看板 -->
+      <div class="sub-page" id="sub-finance-data">
+        <div class="grid3" id="financeStats">
+          <div class="stat-card"><div class="stat-value" id="finRevenue">--</div><div class="stat-label">本月收入</div></div>
+          <div class="stat-card"><div class="stat-value" id="finCost">--</div><div class="stat-label">本月成本</div></div>
+          <div class="stat-card"><div class="stat-value" id="finProfit">--</div><div class="stat-label">本月利润</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title"><span class="icon">📈</span>数据录入</span></div>
+          <div style="display:flex;gap:8px;align-items:end;">
+            <div style="flex:1"><label style="font-size:12px;color:var(--text-secondary)">日期</label><input type="date" id="finDate"></div>
+            <div style="flex:1"><label style="font-size:12px;color:var(--text-secondary)">收入</label><input type="number" id="finRevenueInput" placeholder="0"></div>
+            <div style="flex:1"><label style="font-size:12px;color:var(--text-secondary)">成本</label><input type="number" id="finCostInput" placeholder="0"></div>
+            <button class="btn btn-primary" onclick="addFinanceData()">录入</button>
+          </div>
+          <div id="financeDataList" style="margin-top:16px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 日报复盘 ==================== -->
+    <div class="page" id="page-report">
+      <div class="tabs">
+        <button class="tab-btn active" data-sub="report-template">日报模板</button>
+        <button class="tab-btn" data-sub="report-free">自由复盘</button>
+        <button class="tab-btn" data-sub="report-history">历史记录</button>
+      </div>
+
+      <!-- 日报模板 -->
+      <div class="sub-page active" id="sub-report-template">
+        <div class="card">
+          <div class="card-header"><span class="card-title"><span class="icon">📋</span>今日日报</span><span id="reportDate" style="font-size:13px;color:var(--text-secondary)"></span></div>
+          <div class="report-section">
+            <h3>✅ 今日完成</h3>
+            <textarea id="reportDone" placeholder="记录今天完成的工作..."></textarea>
+          </div>
+          <div class="report-section">
+            <h3>⚠️ 遇到的问题</h3>
+            <textarea id="reportIssue" placeholder="遇到了什么问题？如何解决的？"></textarea>
+          </div>
+          <div class="report-section">
+            <h3>📌 明日计划</h3>
+            <textarea id="reportPlan" placeholder="明天要做什么？"></textarea>
+          </div>
+          <div class="report-section">
+            <h3>💡 收获与反思</h3>
+            <textarea id="reportReflect" placeholder="今天学到了什么？有什么感悟？"></textarea>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-primary" onclick="saveReport()">💾 保存日报</button>
+            <button class="btn btn-outline" onclick="loadTodayReport()">📂 加载今日</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 自由复盘 -->
+      <div class="sub-page" id="sub-report-free">
+        <div class="card">
+          <div class="card-header"><span class="card-title"><span class="icon">🌙</span>自由复盘</span></div>
+          <textarea id="freeReflect" placeholder="写下今天的反思、感悟、心情...&#10;不拘格式，自由书写。" style="min-height:250px;"></textarea>
+          <button class="btn btn-primary" onclick="saveFreeReflect()" style="margin-top:10px;">💾 保存</button>
+        </div>
+      </div>
+
+      <!-- 历史记录 -->
+      <div class="sub-page" id="sub-report-history">
+        <div class="card">
+          <div class="card-header"><span class="card-title"><span class="icon">📅</span>历史日报</span></div>
+          <div id="reportHistory"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 运动健身 ==================== -->
+    <div class="page" id="page-fitness">
+      <div class="tabs">
+        <button class="tab-btn active" data-sub="fitness-checkin">运动打卡</button>
+        <button class="tab-btn" data-sub="fitness-goal">目标追踪</button>
+      </div>
+
+      <!-- 运动打卡 -->
+      <div class="sub-page active" id="sub-fitness-checkin">
+        <div class="grid2">
+          <div class="card">
+            <div class="card-header"><span class="card-title"><span class="icon">🏃</span>今日运动打卡</span></div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <select id="fitnessType">
+                <option value="">选择运动类型</option>
+                <option value="跑步">🏃 跑步</option>
+                <option value="游泳">🏊 游泳</option>
+                <option value="骑行">🚴 骑行</option>
+                <option value="健身">💪 健身/力量训练</option>
+                <option value="瑜伽">🧘 瑜伽</option>
+                <option value="跳绳">🪢 跳绳</option>
+                <option value="散步">🚶 散步</option>
+                <option value="篮球">🏀 篮球</option>
+                <option value="羽毛球">🏸 羽毛球</option>
+                <option value="其他">📌 其他</option>
+              </select>
+              <div style="display:flex;gap:8px;">
+                <input type="number" id="fitnessDuration" placeholder="时长（分钟）" style="flex:1">
+                <input type="number" id="fitnessCalories" placeholder="消耗卡路里（可选）" style="flex:1">
+              </div>
+              <input type="text" id="fitnessNote" placeholder="备注（可选）">
+              <button class="btn btn-primary" onclick="addFitnessRecord()">✅ 打卡</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title"><span class="icon">📊</span>今日统计</span></div>
+            <div class="grid2">
+              <div class="stat-card"><div class="stat-value" id="fitTodayCount">0</div><div class="stat-label">今日次数</div></div>
+              <div class="stat-card"><div class="stat-value" id="fitTodayMin">0</div><div class="stat-label">今日分钟</div></div>
+              <div class="stat-card"><div class="stat-value" id="fitTodayCal">0</div><div class="stat-label">消耗卡路里</div></div>
+              <div class="stat-card"><div class="stat-value" id="fitStreak">0</div><div class="stat-label">连续打卡</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title"><span class="icon">📅</span>最近记录</span></div>
+          <div id="fitnessRecords"></div>
+        </div>
+      </div>
+
+      <!-- 目标追踪 -->
+      <div class="sub-page" id="sub-fitness-goal">
+        <div class="card">
+          <div class="card-header"><span class="card-title"><span class="icon">🎯</span>运动目标设定</span></div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;gap:8px;">
+              <div style="flex:1"><label style="font-size:12px;color:var(--text-secondary)">每周运动次数目标</label><input type="number" id="goalWeeklyCount" placeholder="例如：4" min="1" max="14"></div>
+              <div style="flex:1"><label style="font-size:12px;color:var(--text-secondary)">每次运动分钟目标</label><input type="number" id="goalPerMin" placeholder="例如：30" min="5"></div>
+            </div>
+            <button class="btn btn-primary" onclick="saveFitnessGoal()">💾 保存目标</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title"><span class="icon">📈</span>本周进度</span></div>
+          <div class="grid3" style="margin-bottom:16px;">
+            <div class="stat-card"><div class="stat-value" id="goalWeekCount">0</div><div class="stat-label">本周次数 / <span id="goalWeekCountTarget">4</span></div></div>
+            <div class="stat-card"><div class="stat-value" id="goalWeekMin">0</div><div class="stat-label">本周分钟</div></div>
+            <div class="stat-card"><div class="stat-value" id="goalWeekCal">0</div><div class="stat-label">消耗卡路里</div></div>
+          </div>
+          <div style="margin-bottom:8px;font-size:13px;font-weight:600;">本周完成率</div>
+          <div class="progress-bar" style="height:12px;border-radius:6px;">
+            <div class="progress-fill" id="goalProgressBar" style="width:0%;background:var(--accent2);border-radius:6px;"></div>
+          </div>
+          <div id="goalProgressText" style="text-align:center;margin-top:6px;font-size:13px;color:var(--text-secondary);">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 副业文案 ==================== -->
+    <div class="page" id="page-sidehustle">
+      <div class="tabs">
+        <button class="tab-btn active" data-sub="sidehustle-xhs">小红书文案</button>
+        <button class="tab-btn" data-sub="sidehustle-xy">闲鱼文案</button>
+      </div>
+
+      <!-- 小红书 -->
+      <div class="sub-page active" id="sub-sidehustle-xhs">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title"><span class="icon">📕</span>小红书 · 财务知识文案库</span>
+            <button class="btn btn-primary btn-sm" onclick="addCustomCopy('xhs')">+ 自定义文案</button>
+          </div>
+          <div id="xhsCopyList"></div>
+        </div>
+      </div>
+
+      <!-- 闲鱼 -->
+      <div class="sub-page" id="sub-sidehustle-xy">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title"><span class="icon">🐟</span>闲鱼 · 财务服务文案库</span>
+            <button class="btn btn-primary btn-sm" onclick="addCustomCopy('xy')">+ 自定义文案</button>
+          </div>
+          <div id="xyCopyList"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ==================== DATA LAYER ====================
+const DB = {
+  get(k, def = null) {
+    try { const v = localStorage.getItem('mf_' + k); return v ? JSON.parse(v) : def; }
+    catch { return def; }
+  },
+  set(k, v) { localStorage.setItem('mf_' + k, JSON.stringify(v)); }
+};
+
+// ==================== NAVIGATION ====================
+const titles = { english: '📖 英语学习', reading: '📚 阅读学习', finance: '💰 财务工作', report: '📝 日报复盘', fitness: '🏃 运动健身', sidehustle: '📱 副业文案' };
+document.getElementById('pageTitle').textContent = 'V.C的工作台';
+
+document.querySelectorAll('.sidebar-btn[data-page]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const page = btn.dataset.page;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    document.getElementById('pageTitle').textContent = titles[page];
+    // Reset sub-tabs
+    document.querySelectorAll('#page-' + page + ' .tab-btn').forEach((t, i) => {
+      t.classList.toggle('active', i === 0);
+    });
+    document.querySelectorAll('#page-' + page + ' .sub-page').forEach((s, i) => {
+      s.classList.toggle('active', i === 0);
+    });
+    if (page === 'reading') renderBooks();
+    if (page === 'report') { loadTodayReport(); renderReportHistory(); }
+    if (page === 'finance') renderFinanceData();
+    if (page === 'fitness') renderFitness();
+    if (page === 'sidehustle') { renderCopies(xhsCopies, 'xhsCopyList', 'xhs'); renderCopies(xyCopies, 'xyCopyList', 'xy'); }
+  });
+});
+
+// Sub-tabs
+document.querySelectorAll('.tabs').forEach(tabs => {
+  tabs.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('tab-btn')) return;
+    const btn = e.target;
+    const parent = btn.closest('.page') || btn.closest('.sub-page')?.parentElement;
+    parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const sub = btn.dataset.sub;
+    const pageEl = btn.closest('.page');
+    pageEl.querySelectorAll('.sub-page').forEach(s => s.classList.remove('active'));
+    document.getElementById('sub-' + sub).classList.add('active');
+    if (sub === 'report-history') renderReportHistory();
+  });
+});
+
+// ==================== HEADER ====================
+function updateHeader() {
+  const now = new Date();
+  const h = now.getHours();
+  let g = h < 6 ? '🌙 夜深了' : h < 9 ? '🌅 早上好' : h < 12 ? '☀️ 上午好' : h < 14 ? '🌤 中午好' : h < 18 ? '🌤 下午好' : h < 22 ? '🌆 晚上好' : '🌙 夜深了';
+  document.getElementById('greeting').textContent = g;
+  document.getElementById('headerDate').textContent = now.toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+updateHeader();
+
+// ==================== TOAST ====================
+function toast(msg) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2000);
+}
+
+// ==================== ENGLISH - WORDS ====================
+const defaultWords = [
+  { en: 'initiative', zh: 'n. 主动性，倡议', ex: 'She took the initiative to organize the meeting.', learned: false },
+  { en: 'revenue', zh: 'n. 收入，营收', ex: 'The hotel revenue increased by 15% this quarter.', learned: false },
+  { en: 'occupancy', zh: 'n. 入住率', ex: 'The occupancy rate reached 95% during peak season.', learned: false },
+  { en: 'reconciliation', zh: 'n. 对账，调和', ex: 'Monthly bank reconciliation is due by the 5th.', learned: false },
+  { en: 'depreciation', zh: 'n. 折旧', ex: 'The equipment depreciation is calculated annually.', learned: false },
+  { en: 'forecast', zh: 'n./v. 预测', ex: 'We need to forecast the Q3 revenue accurately.', learned: false },
+  { en: 'invoice', zh: 'n. 发票', ex: 'Please send the invoice to the accounts department.', learned: false },
+  { en: 'audit', zh: 'n./v. 审计', ex: 'The external audit will start next Monday.', learned: false },
+  { en: 'budget', zh: 'n. 预算', ex: 'Each department must submit their budget by Friday.', learned: false },
+  { en: 'compliance', zh: 'n. 合规', ex: 'Financial compliance is critical for hotel operations.', learned: false },
+  { en: 'hospitality', zh: 'n. 酒店业，款待', ex: 'She has worked in hospitality for over ten years.', learned: false },
+  { en: 'negotiate', zh: 'v. 谈判', ex: 'We need to negotiate better rates with suppliers.', learned: false },
+];
+
+let words = DB.get('words', defaultWords);
+let wordIndex = DB.get('wordIndex', 0);
+let wordFlipped = false;
+let todayLearned = DB.get('todayLearned', 0);
+let lastStudyDate = DB.get('lastStudyDate', '');
+let streak = DB.get('streak', 0);
+
+function updateStreak() {
+  const today = new Date().toISOString().split('T')[0];
+  if (lastStudyDate !== today) {
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    streak = lastStudyDate === yesterday ? streak + 1 : 1;
+    lastStudyDate = today;
+    todayLearned = 0;
+    DB.set('streak', streak);
+    DB.set('lastStudyDate', lastStudyDate);
+    DB.set('todayLearned', todayLearned);
+  }
+}
+
+function renderWord() {
+  updateStreak();
+  if (words.length === 0) {
+    document.getElementById('wordText').textContent = '暂无单词';
+    document.getElementById('wordPhonetic').textContent = '';
+    document.getElementById('wordMeaning').textContent = '请先添加单词';
+    document.getElementById('wordExample').textContent = '';
+    return;
+  }
+  if (wordIndex >= words.length) wordIndex = 0;
+  const w = words[wordIndex];
+  document.getElementById('wordText').textContent = w.en;
+  document.getElementById('wordPhonetic').textContent = '';
+  document.getElementById('wordMeaning').textContent = '👆 点击翻转查看释义';
+  document.getElementById('wordExample').textContent = '';
+  document.getElementById('wordCard').style.transform = '';
+  wordFlipped = false;
+  document.getElementById('wordProgress').textContent = `${wordIndex + 1} / ${words.length}`;
+  updateWordStats();
+}
+
+function flipWord() {
+  if (words.length === 0) return;
+  const w = words[wordIndex];
+  if (!wordFlipped) {
+    document.getElementById('wordMeaning').textContent = w.zh;
+    document.getElementById('wordExample').textContent = w.ex || '';
+    wordFlipped = true;
+  } else {
+    document.getElementById('wordMeaning').textContent = '👆 点击翻转查看释义';
+    document.getElementById('wordExample').textContent = '';
+    wordFlipped = false;
+  }
+}
+
+function nextWord() { wordIndex = (wordIndex + 1) % (words.length || 1); DB.set('wordIndex', wordIndex); renderWord(); }
+function prevWord() { wordIndex = (wordIndex - 1 + words.length) % (words.length || 1); DB.set('wordIndex', wordIndex); renderWord(); }
+
+function markWordLearned() {
+  if (words.length === 0) return;
+  updateStreak();
+  words[wordIndex].learned = true;
+  todayLearned++;
+  DB.set('words', words);
+  DB.set('todayLearned', todayLearned);
+  toast('已标记为掌握 ✓');
+  nextWord();
+}
+
+function addWord() {
+  const en = document.getElementById('newWordEn').value.trim();
+  const zh = document.getElementById('newWordZh').value.trim();
+  const ex = document.getElementById('newWordEx').value.trim();
+  if (!en || !zh) return toast('请填写英文和中文释义');
+  words.push({ en, zh, ex, learned: false });
+  DB.set('words', words);
+  document.getElementById('newWordEn').value = '';
+  document.getElementById('newWordZh').value = '';
+  document.getElementById('newWordEx').value = '';
+  updateWordStats();
+  toast('单词已添加 ✓');
+}
+
+function updateWordStats() {
+  document.getElementById('statTotal').textContent = words.length;
+  document.getElementById('statLearned').textContent = words.filter(w => w.learned).length;
+  document.getElementById('statToday').textContent = todayLearned;
+  document.getElementById('statStreak').textContent = streak;
+}
+
+// ==================== ENGLISH - AI CORRECTION ====================
+function correctEnglish() {
+  const input = document.getElementById('aiInput').value.trim();
+  if (!input) return toast('请输入英文句子');
+  const resultDiv = document.getElementById('aiResult');
+  resultDiv.innerHTML = '<p style="color:var(--text-secondary);">⏳ 分析中...</p>';
+
+  // Simple rule-based correction for demo (real AI would use API)
+  const corrections = analyzeEnglish(input);
+  let html = `<div class="correction-block">`;
+  html += `<div class="correction-row"><span class="correction-label">原文</span><span>${input}</span></div>`;
+  html += `<div class="correction-row"><span class="correction-label">修改建议</span><span>${corrections.improved}</span></div>`;
+  html += `<div class="correction-row"><span class="correction-label">解释</span><span>${corrections.explanation}</span></div>`;
+  html += `<div class="correction-row"><span class="correction-label">学习重点</span><span>${corrections.gap}</span></div>`;
+  html += `<div class="correction-row"><span class="correction-label">练习建议</span><span>${corrections.practice}</span></div>`;
+  html += `</div>`;
+  resultDiv.innerHTML = html;
+}
+
+function analyzeEnglish(text) {
+  const lower = text.toLowerCase();
+  let improved = text;
+  let explanation = '你的英文表达不错，继续保持！';
+  let gap = '表达流畅';
+  let practice = '尝试用更复杂的句式表达相同的意思。';
+
+  // Check common patterns
+  if (lower.includes('go to') && /yesterday|last|ago/.test(lower)) {
+    improved = text.replace(/\bgo to\b/gi, 'went to');
+    explanation = '"go to" 需要用过去式 "went to"，因为事件发生在过去。';
+    gap = '时态 (tense)';
+    practice = '用过去式改写：I ___ (go) to the office yesterday. → went';
+  } else if (lower.includes('discuss about')) {
+    improved = text.replace(/discuss about/gi, 'discuss');
+    explanation = '"discuss" 是及物动词，后面直接跟宾语，不需要 "about"。';
+    gap = '介词 (prepositions)';
+    practice = '造句：Let\'s discuss the budget. (不用 about)';
+  } else if (/\bhe don't\b/i.test(text) || /\bshe don't\b/i.test(text)) {
+    improved = text.replace(/\b(he|she) don't\b/gi, '$1 doesn\'t');
+    explanation = '第三人称单数用 "doesn\'t"，不是 "don\'t"。';
+    gap = '主谓一致 (subject-verb agreement)';
+    practice = '造句：He ___ (not) work on weekends. → doesn\'t';
+  } else if (/\bthere is\b.*\b(many|several|a lot of)\b/i.test(text)) {
+    improved = text.replace(/\bthere is\b/gi, 'there are');
+    explanation = '复数名词前用 "there are"，单数用 "there is"。';
+    gap = '主谓一致 (subject-verb agreement)';
+    practice = '填空：There ___ many guests in the lobby. → are';
+  } else if (/\bi has\b/i.test(text) || /\byou has\b/i.test(text) || /\bwe has\b/i.test(text) || /\bthey has\b/i.test(text)) {
+    improved = text.replace(/\b(i|you|we|they) has\b/gi, '$1 have');
+    explanation = 'I/You/We/They 后用 "have"，He/She/It 后用 "has"。';
+    gap = '主谓一致 (subject-verb agreement)';
+    practice = '造句：We ___ (have/has) a meeting at 3 PM. → have';
+  }
+
+  return { improved, explanation, gap, practice };
+}
+
+// ==================== ENGLISH - LISTENING ====================
+const listeningMaterials = [
+  { title: 'Hotel Check-in Dialogue', desc: '酒店入住对话练习', text: 'Good evening. Welcome to Marriott. Do you have a reservation? — Yes, under the name Johnson. — Let me check... I see your booking. A deluxe room for three nights, is that correct? — Yes, that\'s right. — May I see your ID and credit card, please?' },
+  { title: 'Finance Meeting', desc: '财务会议对话', text: 'The Q2 revenue report shows a 12% increase in occupancy. — That\'s great news. What about the F&B department? — Food and beverage revenue is up 8%, but costs have also risen due to inflation. — We need to review our supplier contracts.' },
+  { title: 'Daily Briefing', desc: '每日简报', text: 'Good morning, team. Today we have three main priorities: first, finalize the monthly financial statements; second, prepare for the external audit next week; and third, review the new budget proposals from each department.' },
+];
+
+function renderListening() {
+  document.getElementById('listeningList').innerHTML = listeningMaterials.map((m, i) => `
+    <div class="listening-item" onclick="selectListening(${i})">
+      <div class="listening-icon">🎵</div>
+      <div>
+        <div style="font-weight:700;">${m.title}</div>
+        <div style="font-size:13px;color:var(--text-secondary)">${m.desc}</div>
+      </div>
+    </div>
+  `).join('');
+}
+let currentListening = 0;
+
+function selectListening(i) {
+  currentListening = i;
+  document.getElementById('dictationInput').value = '';
+  document.getElementById('dictationResult').innerHTML = '';
+  toast(`已选择: ${listeningMaterials[i].title}`);
+}
+
+function showDictationAnswer() {
+  document.getElementById('dictationResult').innerHTML = `
+    <div class="correction-block">
+      <div class="correction-row"><span class="correction-label">原文</span><span>${listeningMaterials[currentListening].text}</span></div>
+    </div>
+  `;
+}
+
+function checkDictation() {
+  const input = document.getElementById('dictationInput').value.trim();
+  if (!input) return toast('请先输入你听到的内容');
+  const original = listeningMaterials[currentListening].text;
+  const similarity = simpleSimilarity(input.toLowerCase(), original.toLowerCase());
+  const pct = Math.round(similarity * 100);
+  let emoji = pct >= 90 ? '🎉' : pct >= 60 ? '👍' : '💪';
+  document.getElementById('dictationResult').innerHTML = `
+    <div class="correction-block">
+      <div style="font-weight:700;margin-bottom:8px;">${emoji} 准确度: ${pct}%</div>
+      <div class="correction-row"><span class="correction-label">你的输入</span><span>${input}</span></div>
+      <div class="correction-row"><span class="correction-label">原文</span><span>${original}</span></div>
+    </div>
+  `;
+}
+
+function simpleSimilarity(a, b) {
+  const aWords = a.split(/\s+/);
+  const bWords = b.split(/\s+/);
+  let match = 0;
+  for (const w of aWords) { if (bWords.includes(w)) match++; }
+  return match / Math.max(aWords.length, bWords.length);
+}
+
+// ==================== READING ====================
+let books = DB.get('books', [
+  { id: 1, title: '穷查理宝典', author: '彼得·考夫曼', cover: '📘', total: 532, current: 120, notes: '芒格的智慧非常实用' },
+  { id: 2, title: '原则', author: '瑞·达利欧', cover: '📙', total: 576, current: 300, notes: '桥水基金创始人的生活与工作原则' },
+]);
+
+function renderBooks() {
+  const list = document.getElementById('bookList');
+  if (books.length === 0) {
+    list.innerHTML = '<div class="empty"><div class="icon">📚</div><p>还没有添加书籍</p><p style="font-size:13px;color:var(--text-secondary)">点击右上角"添加书籍"开始</p></div>';
+    return;
+  }
+  list.innerHTML = books.map(b => {
+    const pct = Math.round(b.current / b.total * 100);
+    return `
+    <div class="book-item">
+      <div class="book-cover">${b.cover}</div>
+      <div class="book-info">
+        <div class="book-title">${b.title}</div>
+        <div class="book-author">${b.author}</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div class="progress-text">${b.current} / ${b.total} 页 (${pct}%)</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">📝 ${b.notes || '暂无笔记'}</div>
+        <div style="margin-top:8px;display:flex;gap:6px;">
+          <button class="btn btn-outline btn-sm" onclick="updateBookProgress(${b.id})">更新进度</button>
+          <button class="btn btn-outline btn-sm" onclick="editBookNote(${b.id})">编辑笔记</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteBook(${b.id})">删除</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showAddBook() {
+  const title = prompt('书名：');
+  if (!title) return;
+  const author = prompt('作者：');
+  if (!author) return;
+  const total = parseInt(prompt('总页数：')) || 0;
+  const id = Date.now();
+  const covers = ['📘', '📙', '📗', '📕', '📓'];
+  books.push({ id, title, author, cover: covers[Math.floor(Math.random() * covers.length)], total, current: 0, notes: '' });
+  DB.set('books', books);
+  renderBooks();
+  toast('书籍已添加 ✓');
+}
+
+function updateBookProgress(id) {
+  const book = books.find(b => b.id === id);
+  if (!book) return;
+  const val = parseInt(prompt(`当前阅读页数 (共 ${book.total} 页)：`, book.current));
+  if (isNaN(val) || val < 0 || val > book.total) return;
+  book.current = val;
+  DB.set('books', books);
+  renderBooks();
+  toast('进度已更新 ✓');
+}
+
+function editBookNote(id) {
+  const book = books.find(b => b.id === id);
+  if (!book) return;
+  const note = prompt('读书笔记：', book.notes);
+  if (note === null) return;
+  book.notes = note;
+  DB.set('books', books);
+  renderBooks();
+  toast('笔记已保存 ✓');
+}
+
+function deleteBook(id) {
+  if (!confirm('确定删除这本书？')) return;
+  books = books.filter(b => b.id !== id);
+  DB.set('books', books);
+  renderBooks();
+  toast('已删除');
+}
+
+// ==================== FINANCE - TODO ====================
+let todos = DB.get('todos', []);
+function renderTodos() {
+  const list = document.getElementById('todoList');
+  if (todos.length === 0) {
+    list.innerHTML = '<div class="empty"><p style="color:var(--text-secondary)">暂无待办事项</p></div>';
+    return;
+  }
+  list.innerHTML = todos.map((t, i) => `
+    <div class="todo-item">
+      <div class="todo-check ${t.done ? 'done' : ''}" onclick="toggleTodo(${i})"></div>
+      <span class="todo-text ${t.done ? 'done' : ''}">${t.text}</span>
+      <span class="todo-delete" onclick="deleteTodo(${i})">✕</span>
+    </div>
+  `).join('');
+}
+
+function addTodo() {
+  const input = document.getElementById('todoInput');
+  const text = input.value.trim();
+  if (!text) return;
+  todos.push({ text, done: false, date: new Date().toISOString() });
+  DB.set('todos', todos);
+  input.value = '';
+  renderTodos();
+}
+
+function toggleTodo(i) { todos[i].done = !todos[i].done; DB.set('todos', todos); renderTodos(); }
+function deleteTodo(i) { todos.splice(i, 1); DB.set('todos', todos); renderTodos(); }
+
+// ==================== FINANCE - CALCULATOR ====================
+let calcExpr = '';
+function calcInput(v) {
+  const ops = { '*': '×', '/': '÷' };
+  calcExpr += v;
+  document.getElementById('calcDisplay').textContent = calcExpr.replace(/[*\/]/g, m => ops[m] || m) || '0';
+}
+function calcClear() { calcExpr = ''; document.getElementById('calcDisplay').textContent = '0'; }
+function calcEval() {
+  try {
+    const result = Function('"use strict";return (' + calcExpr + ')')();
+    document.getElementById('calcDisplay').textContent = result;
+    calcExpr = String(result);
+  } catch { document.getElementById('calcDisplay').textContent = '错误'; calcExpr = ''; }
+}
+
+function calcRevPAR() {
+  const rev = parseFloat(document.getElementById('revparRev').value);
+  const rooms = parseFloat(document.getElementById('revparRooms').value);
+  if (!rev || !rooms) return toast('请填写收入和房间数');
+  document.getElementById('revparResult').textContent = `RevPAR = ${(rev / rooms).toFixed(2)} 元/间`;
+}
+function calcGOP() {
+  const rev = parseFloat(document.getElementById('gopRevenue').value);
+  const cost = parseFloat(document.getElementById('gopCost').value);
+  if (!rev || !cost) return toast('请填写收入和成本');
+  const gop = ((rev - cost) / rev * 100).toFixed(1);
+  document.getElementById('gopResult').textContent = `GOP 率 = ${gop}%`;
+}
+
+// ==================== FINANCE - DATA ====================
+let financeData = DB.get('financeData', []);
+function renderFinanceData() {
+  const list = document.getElementById('financeDataList');
+  // Aggregate this month
+  const now = new Date();
+  const thisMonth = financeData.filter(d => {
+    const dt = new Date(d.date);
+    return dt.getMonth() === now.getMonth() && dt.getFullYear() === now.getFullYear();
+  });
+  const rev = thisMonth.reduce((s, d) => s + d.revenue, 0);
+  const cost = thisMonth.reduce((s, d) => s + d.cost, 0);
+  document.getElementById('finRevenue').textContent = rev.toLocaleString();
+  document.getElementById('finCost').textContent = cost.toLocaleString();
+  document.getElementById('finProfit').textContent = (rev - cost).toLocaleString();
+
+  if (financeData.length === 0) {
+    list.innerHTML = '<div class="empty"><p style="color:var(--text-secondary)">暂无数据</p></div>';
+    return;
+  }
+  list.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="border-bottom:2px solid var(--border)"><th style="padding:8px;text-align:left">日期</th><th style="padding:8px;text-align:right">收入</th><th style="padding:8px;text-align:right">成本</th><th style="padding:8px;text-align:right">利润</th><th></th></tr></thead><tbody>' +
+    financeData.slice(-20).reverse().map((d, i) => `
+      <tr style="border-bottom:1px solid #f0f0f0">
+        <td style="padding:8px">${d.date}</td>
+        <td style="padding:8px;text-align:right">${d.revenue.toLocaleString()}</td>
+        <td style="padding:8px;text-align:right">${d.cost.toLocaleString()}</td>
+        <td style="padding:8px;text-align:right;color:${d.revenue - d.cost >= 0 ? 'var(--accent2)' : 'var(--accent)'}">${(d.revenue - d.cost).toLocaleString()}</td>
+        <td style="padding:8px"><button class="btn btn-danger btn-sm" onclick="deleteFinanceData(${financeData.length - 1 - i})">✕</button></td>
+      </tr>
+    `).join('') + '</tbody></table>';
+}
+
+function addFinanceData() {
+  const date = document.getElementById('finDate').value;
+  const revenue = parseFloat(document.getElementById('finRevenueInput').value);
+  const cost = parseFloat(document.getElementById('finCostInput').value);
+  if (!date || isNaN(revenue) || isNaN(cost)) return toast('请填写完整数据');
+  financeData.push({ date, revenue, cost });
+  financeData.sort((a, b) => new Date(a.date) - new Date(b.date));
+  DB.set('financeData', financeData);
+  document.getElementById('finRevenueInput').value = '';
+  document.getElementById('finCostInput').value = '';
+  renderFinanceData();
+  toast('数据已录入 ✓');
+}
+
+function deleteFinanceData(i) {
+  financeData.splice(i, 1);
+  DB.set('financeData', financeData);
+  renderFinanceData();
+}
+
+// ==================== REPORT ====================
+function getToday() { return new Date().toISOString().split('T')[0]; }
+function saveReport() {
+  const report = {
+    date: getToday(),
+    done: document.getElementById('reportDone').value,
+    issue: document.getElementById('reportIssue').value,
+    plan: document.getElementById('reportPlan').value,
+    reflect: document.getElementById('reportReflect').value,
+  };
+  let reports = DB.get('reports', {});
+  reports[report.date] = report;
+  DB.set('reports', reports);
+  toast('日报已保存 ✓');
+}
+
+function loadTodayReport() {
+  const reports = DB.get('reports', {});
+  const today = getToday();
+  document.getElementById('reportDate').textContent = today;
+  if (reports[today]) {
+    document.getElementById('reportDone').value = reports[today].done || '';
+    document.getElementById('reportIssue').value = reports[today].issue || '';
+    document.getElementById('reportPlan').value = reports[today].plan || '';
+    document.getElementById('reportReflect').value = reports[today].reflect || '';
+  }
+}
+
+function renderReportHistory() {
+  const reports = DB.get('reports', {});
+  const dates = Object.keys(reports).sort().reverse();
+  const container = document.getElementById('reportHistory');
+  if (dates.length === 0) {
+    container.innerHTML = '<div class="empty"><p style="color:var(--text-secondary)">暂无历史日报</p></div>';
+    return;
+  }
+  container.innerHTML = dates.map(d => {
+    const r = reports[d];
+    return `
+    <div class="book-item" style="cursor:pointer" onclick="viewReport('${d}')">
+      <div class="book-cover" style="background:linear-gradient(135deg, var(--accent3), #a0cfff)">📋</div>
+      <div class="book-info">
+        <div class="book-title">${d}</div>
+        <div style="font-size:13px;color:var(--text-secondary)">
+          完成: ${(r.done || '无').slice(0, 40)}${(r.done || '').length > 40 ? '...' : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function viewReport(date) {
+  const reports = DB.get('reports', {});
+  const r = reports[date];
+  if (!r) return;
+  alert(`📅 ${date}\n\n✅ 今日完成:\n${r.done || '无'}\n\n⚠️ 问题:\n${r.issue || '无'}\n\n📌 明日计划:\n${r.plan || '无'}\n\n💡 反思:\n${r.reflect || '无'}`);
+}
+
+function saveFreeReflect() {
+  const text = document.getElementById('freeReflect').value;
+  if (!text.trim()) return toast('请输入内容');
+  let freeReflects = DB.get('freeReflects', {});
+  const today = getToday();
+  freeReflects[today] = text;
+  DB.set('freeReflects', freeReflects);
+  toast('复盘已保存 ✓');
+}
+
+// Load free reflect for today
+(function() {
+  const freeReflects = DB.get('freeReflects', {});
+  const today = getToday();
+  if (freeReflects[today]) {
+    document.getElementById('freeReflect').value = freeReflects[today];
+  }
+})();
+
+// ==================== FITNESS ====================
+let fitnessRecords = DB.get('fitnessRecords', []);
+let fitnessGoal = DB.get('fitnessGoal', { weeklyCount: 4, perMin: 30 });
+
+function getWeekRange() {
+  const now = new Date();
+  const day = now.getDay() || 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - day + 1);
+  monday.setHours(0,0,0,0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23,59,59,999);
+  return { monday, sunday };
+}
+
+function addFitnessRecord() {
+  const type = document.getElementById('fitnessType').value;
+  const duration = parseInt(document.getElementById('fitnessDuration').value);
+  const calories = parseInt(document.getElementById('fitnessCalories').value) || 0;
+  if (!type || !duration) return toast('请选择运动类型并填写时长');
+  fitnessRecords.push({
+    id: Date.now(),
+    type, duration, calories,
+    note: document.getElementById('fitnessNote').value,
+    date: new Date().toISOString(),
+  });
+  DB.set('fitnessRecords', fitnessRecords);
+  document.getElementById('fitnessDuration').value = '';
+  document.getElementById('fitnessCalories').value = '';
+  document.getElementById('fitnessNote').value = '';
+  document.getElementById('fitnessType').value = '';
+  renderFitness();
+  toast('打卡成功 🎉');
+}
+
+function renderFitness() {
+  const today = new Date().toISOString().split('T')[0];
+  const todayRecords = fitnessRecords.filter(r => r.date.startsWith(today));
+  document.getElementById('fitTodayCount').textContent = todayRecords.length;
+  document.getElementById('fitTodayMin').textContent = todayRecords.reduce((s, r) => s + r.duration, 0);
+  document.getElementById('fitTodayCal').textContent = todayRecords.reduce((s, r) => s + r.calories, 0);
+
+  // Streak
+  let s = 0, d = new Date();
+  while (true) {
+    const ds = d.toISOString().split('T')[0];
+    if (fitnessRecords.some(r => r.date.startsWith(ds))) { s++; d.setDate(d.getDate() - 1); }
+    else break;
+  }
+  document.getElementById('fitStreak').textContent = s;
+
+  // Records list
+  const container = document.getElementById('fitnessRecords');
+  const recent = fitnessRecords.slice(-20).reverse();
+  if (recent.length === 0) {
+    container.innerHTML = '<div class="empty"><p style="color:var(--text-secondary);">还没有运动记录，开始打卡吧！</p></div>';
+  } else {
+    const icons = { '跑步':'🏃','游泳':'🏊','骑行':'🚴','健身':'💪','瑜伽':'🧘','跳绳':'🪢','散步':'🚶','篮球':'🏀','羽毛球':'🏸','其他':'📌' };
+    container.innerHTML = recent.map((r, i) => `
+      <div class="fitness-record">
+        <div class="fitness-icon">${icons[r.type] || '🏃'}</div>
+        <div class="fitness-info">
+          <div class="type">${r.type} · ${r.duration}分钟 · ${r.calories}千卡</div>
+          <div class="meta">${r.date.slice(0, 10)} ${r.note || ''}</div>
+        </div>
+        <span class="delete" onclick="deleteFitnessRecord(${fitnessRecords.length - 1 - i})">✕</span>
+      </div>
+    `).join('');
+  }
+
+  // Goal tracking
+  const { monday, sunday } = getWeekRange();
+  const weekRecords = fitnessRecords.filter(r => {
+    const d = new Date(r.date);
+    return d >= monday && d <= sunday;
+  });
+  document.getElementById('goalWeekCount').textContent = weekRecords.length;
+  document.getElementById('goalWeekMin').textContent = weekRecords.reduce((s, r) => s + r.duration, 0);
+  document.getElementById('goalWeekCal').textContent = weekRecords.reduce((s, r) => s + r.calories, 0);
+  document.getElementById('goalWeekCountTarget').textContent = fitnessGoal.weeklyCount;
+  const pct = Math.min(100, Math.round(weekRecords.length / fitnessGoal.weeklyCount * 100));
+  document.getElementById('goalProgressBar').style.width = pct + '%';
+  document.getElementById('goalProgressText').textContent = pct + '%';
+}
+
+function deleteFitnessRecord(i) {
+  fitnessRecords.splice(i, 1);
+  DB.set('fitnessRecords', fitnessRecords);
+  renderFitness();
+}
+
+function saveFitnessGoal() {
+  const weeklyCount = parseInt(document.getElementById('goalWeeklyCount').value);
+  const perMin = parseInt(document.getElementById('goalPerMin').value);
+  if (!weeklyCount || !perMin) return toast('请填写完整目标');
+  fitnessGoal = { weeklyCount, perMin };
+  DB.set('fitnessGoal', fitnessGoal);
+  renderFitness();
+  toast('目标已保存 ✓');
+}
+
+// Load goal into inputs
+(function() {
+  document.getElementById('goalWeeklyCount').value = fitnessGoal.weeklyCount;
+  document.getElementById('goalPerMin').value = fitnessGoal.perMin;
+})();
+
+// ==================== SIDE HUSTLE - COPYWRITING ====================
+const defaultXhsCopies = [
+  { id: 1, tag: '财务知识', title: '酒店财务人必懂的3个指标', body: '在酒店行业做财务，这三个指标一定要会看！\n\n📊 RevPAR（每间可用房收入）= 客房收入 ÷ 可用房间数\n这是衡量酒店经营效率的核心指标，RevPAR越高说明经营越好~\n\n💰 GOP率（经营毛利率）= (收入 - 运营成本) ÷ 收入 × 100%\nGOP率直接反映酒店的盈利能力，行业标杆一般在35%-45%\n\n📈 Occ%（入住率）= 已售房间数 ÷ 可售房间数\n入住率是酒店的生命线，旺季能做到90%+就很优秀啦\n\n💡 这三个指标互相关联，分析时要结合起来看哦！\n\n#酒店财务 #财务知识 #酒店管理 #财务人', platform: 'xhs' },
+  { id: 2, tag: '职场干货', title: '酒店财务月结流程大公开', body: '做了5年酒店财务，月结流程其实就这6步👇\n\n1️⃣ 核对各部门收入日报（前厅、餐饮、宴会）\n2️⃣ 银行对账（每个账户都要平！）\n3️⃣ 应收账款核销（OTA佣金、旅行社挂账）\n4️⃣ 成本结转（食材、布草、能耗）\n5️⃣ 计提折旧和摊销\n6️⃣ 出财务报表（P&L、Balance Sheet）\n\n⏰ 一般5号前完成，最忙的就是月初这几天！\n\n姐妹们还有什么想了解的财务问题，评论区告诉我~\n\n#酒店财务 #月结 #财务流程 #会计日常', platform: 'xhs' },
+  { id: 3, tag: '技能提升', title: '财务人提升英语的5个好习惯', body: '在万豪做财务，英语是刚需！分享我的学习方法📚\n\n✨ 每天记5个财务英语单词（AR/AP/GL这些是基础）\n✨ 看英文财报，推荐看Marriott的10-K年报\n✨ 听酒店行业英文播客（推荐Hotel Business Podcast）\n✨ 用英文写日报，哪怕只是简单几句\n✨ 参加酒店的英文会议，大胆开口说\n\n坚持半年，你会发现邮件和会议都轻松多了！\n\n#财务英语 #英语学习 #职场提升 #万豪', platform: 'xhs' },
+  { id: 4, tag: '实用工具', title: '酒店财务必备的Excel函数', body: '做酒店财务3年，这些Excel函数每天必用🔥\n\n📌 VLOOKUP/XLOOKUP — 匹配房价、会员信息\n📌 SUMIFS — 按日期/部门汇总收入\n📌 PivotTable — 数��透视，做月度分析报表\n📌 IFERROR — 处理数据异常，报表更干净\n📌 TEXT — 格式化日期和数字\n📌 CONCATENATE/TEXTJOIN — 合并文本\n\n一个函数一个函数学，慢慢就熟练了~\n需要模板的评论区扣1，我整理好发出来！\n\n#Excel技巧 #财务必备 #酒店财务 #效率工具', platform: 'xhs' },
+  { id: 5, tag: '经验分享', title: '从出纳到财务主管，我用了4年', body: '刚入行的时候我也是从小出纳做起\n每天就是开发票、录凭证、跑银行\n\n后来慢慢接触了：\n🔹 成本核算\n🔹 预算编制\n🔹 税务申报\n🔹 财务分析\n\n第3年考下了中级会计职称\n第4年升了主管\n\n其实财务这条路没有捷径\n就是多学、多问、多积累\n刚入行的姐妹别着急，慢慢来！\n\n#财务成长 #会计职业 #职场进阶 #酒店财务', platform: 'xhs' },
+];
+
+const defaultXyCopies = [
+  { id: 101, tag: '财务服务', title: '专业酒店财务记账/报税服务', body: '【服务内容】\n✅ 酒店行业专业记账\n✅ 月度/季度税务申报\n✅ 财务报表编制\n✅ 成本核算分析\n\n【关于我】\n· 万豪集团酒店财务在职\n· 5年酒店行业财务经验\n· 中级会计职称\n\n【价格】\n💰 月度记账：200元/月起\n💰 报税服务：100元/次\n\n具体价格根据业务量面议，欢迎咨询！\n\n#财务服务 #记账报税 #酒店财务', platform: 'xy' },
+  { id: 102, tag: '财务服务', title: 'Excel财务报表模板定制', body: '【服务内容】\n📊 根据你的需求定制Excel财务报表模板\n包括但不限于：\n· 收入日报/月报模板\n· 成本分析表\n· 预算对比表\n· 应收账款管理表\n\n【优势】\n· 自动化公式，填入数据即可出结果\n· 专业美观，可直接用于汇报\n· 酒店行业专属设计\n\n【价格】\n单个模板：50元\n全套模板：200元（含5个常用报表）\n\n需要什么样的模板可以具体沟通~', platform: 'xy' },
+  { id: 103, tag: '咨询服务', title: '酒店财务体系搭建咨询', body: '【适合人群】\n新开业酒店 / 财务制度不完善的小型酒店\n\n【我能帮你】\n🔹 搭建财务核算体系\n🔹 设计内控制度\n🔹 制定预算模板\n🔹 梳理税务流程\n\n【服务方式】\n线上沟通 + 交付文档\n\n【价格】\n咨询费：300元/小时\n整套方案：1500元起\n\n先沟通需求，再报价，不合适不收费~\n\n#酒店管理 #财务咨询 #财务体系', platform: 'xy' },
+];
+
+let xhsCopies = DB.get('xhsCopies', defaultXhsCopies);
+let xyCopies = DB.get('xyCopies', defaultXyCopies);
+
+function renderCopies(list, containerId, platform) {
+  const container = document.getElementById(containerId);
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty"><div class="icon">📝</div><p>暂无文案</p></div>';
+    return;
+  }
+  container.innerHTML = list.map(c => `
+    <div class="copy-card">
+      <span class="copy-tag ${platform}">${c.tag}</span>
+      <div class="copy-title">${c.title}</div>
+      <div class="copy-body">${c.body}</div>
+      <div class="copy-actions">
+        <button class="copy-btn" id="copyBtn_${c.id}" onclick="copyText('copyBtn_${c.id}', ${JSON.stringify(c.body).replace(/"/g, '&quot;')})">📋 一键复制</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCopy('${platform}', ${c.id})">删除</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function copyText(btnId, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(btnId);
+    btn.textContent = '✅ 已复制';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 一键复制'; btn.classList.remove('copied'); }, 2000);
+    toast('文案已复制到剪贴板 ✓');
+  }).catch(() => {
+    toast('复制失败，请手动复制');
+  });
+}
+
+function deleteCopy(platform, id) {
+  if (!confirm('确定删除这篇文案？')) return;
+  if (platform === 'xhs') {
+    xhsCopies = xhsCopies.filter(c => c.id !== id);
+    DB.set('xhsCopies', xhsCopies);
+    renderCopies(xhsCopies, 'xhsCopyList', 'xhs');
+  } else {
+    xyCopies = xyCopies.filter(c => c.id !== id);
+    DB.set('xyCopies', xyCopies);
+    renderCopies(xyCopies, 'xyCopyList', 'xy');
+  }
+  toast('已删除');
+}
+
+function addCustomCopy(platform) {
+  const tag = prompt('分类标签（如：财务知识、职场干货）：');
+  if (!tag) return;
+  const title = prompt('标题：');
+  if (!title) return;
+  const body = prompt('正文内容：');
+  if (!body) return;
+  const copy = { id: Date.now(), tag, title, body, platform };
+  if (platform === 'xhs') {
+    xhsCopies.unshift(copy);
+    DB.set('xhsCopies', xhsCopies);
+    renderCopies(xhsCopies, 'xhsCopyList', 'xhs');
+  } else {
+    xyCopies.unshift(copy);
+    DB.set('xyCopies', xyCopies);
+    renderCopies(xyCopies, 'xyCopyList', 'xy');
+  }
+  toast('文案已添加 ✓');
+}
+
+// ==================== EXPORT ====================
+function exportAllData() {
+  const data = {
+    words: DB.get('words'),
+    books: DB.get('books'),
+    todos: DB.get('todos'),
+    financeData: DB.get('financeData'),
+    fitnessRecords: DB.get('fitnessRecords'),
+    fitnessGoal: DB.get('fitnessGoal'),
+    xhsCopies: DB.get('xhsCopies'),
+    xyCopies: DB.get('xyCopies'),
+    reports: DB.get('reports'),
+    freeReflects: DB.get('freeReflects'),
+    exportedAt: new Date().toISOString(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `workbench-backup-${getToday()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('数据已导出 ✓');
+}
+
+// ==================== INIT ====================
+renderWord();
+updateWordStats();
+renderBooks();
+renderTodos();
+renderListening();
+renderFinanceData();
+renderFitness();
+renderCopies(xhsCopies, 'xhsCopyList', 'xhs');
+renderCopies(xyCopies, 'xyCopyList', 'xy');
+loadTodayReport();
+renderReportHistory();
+document.getElementById('finDate').value = getToday();
+</script>
+
+</body>
+</html>
