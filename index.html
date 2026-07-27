@@ -1511,8 +1511,8 @@ function simpleSimilarity(a, b) {
 
 // ==================== READING ====================
 let books = DB.get('books', [
-  { id: 1, title: '穷查理宝典', author: '彼得·考夫曼', cover: '📘', total: 532, current: 120, finished: false, notes: [] },
-  { id: 2, title: '原则', author: '瑞·达利欧', cover: '📙', total: 576, current: 300, finished: false, notes: [] },
+  { id: 1, title: '穷查理宝典', author: '彼得·考夫曼', cover: '📘', total: 532, current: 120, finished: false, notes: [], link: '' },
+  { id: 2, title: '原则', author: '瑞·达利欧', cover: '📙', total: 576, current: 300, finished: false, notes: [], link: '' },
 ]);
 // Migrate old notes format
 books.forEach(b => { if (typeof b.notes === 'string') b.notes = b.notes ? [{ date: new Date().toISOString().slice(0,10), text: b.notes }] : []; if (b.finished === undefined) b.finished = false; });
@@ -1580,8 +1580,14 @@ function openBookDetail(id) {
           ${b.finished
             ? '<button class="btn btn-outline btn-sm" onclick="toggleBookFinished(' + b.id + ')">📖 标记为未读完</button>'
             : '<button class="btn btn-success btn-sm" onclick="toggleBookFinished(' + b.id + ')">✅ 标记已读完</button>'}
+          <button class="btn btn-outline btn-sm" onclick="editBookLink(${b.id})">🔗 编辑链接</button>
           <button class="btn btn-danger btn-sm" onclick="deleteBook(${b.id})">🗑 删除</button>
         </div>
+        ${b.link ? `
+        <div style="margin-top:10px;">
+          <a href="${b.link}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="text-decoration:none;">📖 去微信读书阅读 →</a>
+        </div>` : `
+        <div style="margin-top:8px;font-size:12px;color:var(--text-secondary);">💡 点击「编辑链接」添加微信读书链接</div>`}
       </div>
     </div>
     <div class="card">
@@ -1628,6 +1634,17 @@ function toggleBookFinished(id) {
   toast(b.finished ? '🎉 已标记为读完！' : '已标记为未读完');
 }
 
+function editBookLink(id) {
+  const b = books.find(bk => bk.id === id);
+  if (!b) return;
+  const link = prompt('微信读书链接（粘贴后点击"去阅读"即可跳转）：', b.link || '');
+  if (link === null) return;
+  b.link = link.trim();
+  DB.set('books', books);
+  openBookDetail(id);
+  toast(link ? '链接已保存 ✓' : '链接已清除');
+}
+
 function showAddBook() {
   const title = prompt('书名：');
   if (!title) return;
@@ -1637,7 +1654,7 @@ function showAddBook() {
   if (!total) return toast('请填写总页数');
   const id = Date.now();
   const covers = ['📘', '📙', '📗', '📕', '📓'];
-  books.push({ id, title, author, cover: covers[Math.floor(Math.random() * covers.length)], total, current: 0, finished: false, notes: [] });
+  books.push({ id, title, author, cover: covers[Math.floor(Math.random() * covers.length)], total, current: 0, finished: false, notes: [], link: '' });
   DB.set('books', books);
   renderBooks();
   toast('书籍已添加 ✓');
