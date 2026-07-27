@@ -559,6 +559,49 @@ textarea { min-height: 80px; }
 .compare-result .match-mid { color: var(--accent3); font-weight: 700; }
 .compare-result .match-low { color: var(--accent); font-weight: 700; }
 
+/* Book Detail */
+.book-detail-back { margin-bottom: 16px; }
+.book-detail-header {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+.book-detail-cover {
+  width: 100px;
+  height: 140px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent4), #dfe6fd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  flex-shrink: 0;
+}
+.book-detail-info h2 { font-size: 20px; margin-bottom: 4px; }
+.book-detail-info .author { color: var(--text-secondary); font-size: 14px; margin-bottom: 10px; }
+.book-detail-info .finished-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.book-detail-info .finished-badge.done { background: #d4f5e9; color: var(--accent2); }
+.book-detail-info .finished-badge.reading { background: #e4f0ff; color: var(--accent3); }
+
+.book-note-item {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.book-note-item .note-date { font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+.book-note-item .note-text { white-space: pre-wrap; }
+
 @media (max-width: 768px) {
   .grid2, .grid3 { grid-template-columns: 1fr; }
   .sidebar { width: 56px; }
@@ -700,11 +743,16 @@ textarea { min-height: 80px; }
 
     <!-- ==================== 阅读 ==================== -->
     <div class="page" id="page-reading">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <span style="font-weight:700;font-size:16px;">📚 我的书架</span>
-        <button class="btn btn-primary btn-sm" onclick="showAddBook()">+ 添加书籍</button>
+      <!-- 书架列表 -->
+      <div id="readingListView">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <span style="font-weight:700;font-size:16px;">📚 我的书架</span>
+          <button class="btn btn-primary btn-sm" onclick="showAddBook()">+ 添加书籍</button>
+        </div>
+        <div id="bookList"></div>
       </div>
-      <div id="bookList"></div>
+      <!-- 书籍详情 -->
+      <div id="readingDetailView" style="display:none;"></div>
     </div>
 
     <!-- ==================== 财务工作 ==================== -->
@@ -1108,24 +1156,44 @@ function flipWord() {
 }
 
 // ---- 单词发音 ----
+// Pre-load voices
+let voicesLoaded = false;
+speechSynthesis.onvoiceschanged = () => { voicesLoaded = true; };
+speechSynthesis.getVoices();
+
 function speakWord() { speakText(words[wordIndex].en, 1); }
-function speakWordSlow() { speakText(words[wordIndex].en, 0.7); }
+function speakWordSlow() { speakText(words[wordIndex].en, 0.65); }
 
 function speakText(text, rate = 1) {
-  if (!('speechSynthesis' in window)) return toast('浏览器不支持语音合成');
+  if (!('speechSynthesis' in window)) {
+    toast('⚠️ 浏览器不支持语音合成，请用 Chrome 或 Safari');
+    return;
+  }
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'en-US';
   u.rate = rate;
   u.pitch = 1;
-  // Try to pick a good English voice
+  u.volume = 1;
+
   const voices = speechSynthesis.getVoices();
-  const enVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Female')) ||
-                  voices.find(v => v.lang.startsWith('en-US')) ||
+  const enVoice = voices.find(v => v.lang === 'en-US' && v.name.includes('Samantha')) ||
+                  voices.find(v => v.lang === 'en-US' && v.name.includes('Female')) ||
+                  voices.find(v => v.lang === 'en-US') ||
                   voices.find(v => v.lang.startsWith('en'));
   if (enVoice) u.voice = enVoice;
+
   const btn = document.getElementById('wordSpeakBtn');
-  if (btn) { btn.classList.add('speaking'); setTimeout(() => btn.classList.remove('speaking'), 1500); }
+  if (btn) { btn.classList.add('speaking'); btn.textContent = '🔊 播放中...'; }
+
+  u.onend = () => {
+    if (btn) { btn.classList.remove('speaking'); btn.textContent = '🔊 发音'; }
+  };
+  u.onerror = () => {
+    if (btn) { btn.classList.remove('speaking'); btn.textContent = '🔊 发音'; }
+    toast('⚠️ 语音播放失败，请重试');
+  };
+
   speechSynthesis.speak(u);
 }
 
@@ -1140,20 +1208,36 @@ async function recordWord() {
 }
 
 async function startRecording() {
-  if (!('MediaRecorder' in window)) return toast('浏览器不支持录音，请用最新版 Chrome 或 Safari');
+  if (!('MediaRecorder' in window)) {
+    toast('⚠️ 浏览器不支持录音，请用最新版 Chrome 或 Safari');
+    return;
+  }
+  // If already recording, stop
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    return;
+  }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+    mediaRecorder = new MediaRecorder(stream, { mimeType });
     audioChunks = [];
-    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
     mediaRecorder.onstop = () => {
-      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      if (audioChunks.length === 0) {
+        toast('⚠️ 未录到声音，请重试');
+        resetRecordButtons();
+        stream.getTracks().forEach(t => t.stop());
+        return;
+      }
+      const audioBlob = new Blob(audioChunks, { type: mimeType });
       const audioUrl = URL.createObjectURL(audioBlob);
       if (recordingTarget === 'word') finishWordRecording(audioUrl);
       else if (recordingTarget === 'listen') finishListenRecording(audioUrl);
       stream.getTracks().forEach(t => t.stop());
     };
     mediaRecorder.start();
+    toast('🎤 正在录音，再次点击停止...');
     if (recordingTarget === 'word') {
       const btn = document.getElementById('wordRecordBtn');
       btn.textContent = '⏹ 停止录音';
@@ -1163,11 +1247,25 @@ async function startRecording() {
       btn.textContent = '⏹ 停止录音';
       btn.classList.add('recording');
     }
-    // Auto-stop after 10 seconds
-    setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); }, 10000);
+    setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); toast('⏰ 录音已自动停止（10秒）'); } }, 10000);
   } catch (e) {
-    toast('无法访问麦克风，请允许麦克风权限');
+    console.error('录音错误:', e);
+    if (e.name === 'NotAllowedError') {
+      toast('⚠️ 麦克风权限被拒绝，请在浏览器设置中允许');
+    } else if (e.name === 'NotFoundError') {
+      toast('⚠️ 未检测到麦克风设备');
+    } else {
+      toast('⚠️ 录音失败: ' + (e.message || '未知错误'));
+    }
+    resetRecordButtons();
   }
+}
+
+function resetRecordButtons() {
+  const wordBtn = document.getElementById('wordRecordBtn');
+  const listenBtn = document.getElementById('listenRecordBtn');
+  if (wordBtn) { wordBtn.textContent = '🎤 跟读'; wordBtn.classList.remove('recording'); }
+  if (listenBtn) { listenBtn.textContent = '🎤 开始跟读'; listenBtn.classList.remove('recording'); }
 }
 
 function finishWordRecording(audioUrl) {
@@ -1413,35 +1511,121 @@ function simpleSimilarity(a, b) {
 
 // ==================== READING ====================
 let books = DB.get('books', [
-  { id: 1, title: '穷查理宝典', author: '彼得·考夫曼', cover: '📘', total: 532, current: 120, notes: '芒格的智慧非常实用' },
-  { id: 2, title: '原则', author: '瑞·达利欧', cover: '📙', total: 576, current: 300, notes: '桥水基金创始人的生活与工作原则' },
+  { id: 1, title: '穷查理宝典', author: '彼得·考夫曼', cover: '📘', total: 532, current: 120, finished: false, notes: [] },
+  { id: 2, title: '原则', author: '瑞·达利欧', cover: '📙', total: 576, current: 300, finished: false, notes: [] },
 ]);
+// Migrate old notes format
+books.forEach(b => { if (typeof b.notes === 'string') b.notes = b.notes ? [{ date: new Date().toISOString().slice(0,10), text: b.notes }] : []; if (b.finished === undefined) b.finished = false; });
+DB.set('books', books);
 
 function renderBooks() {
   const list = document.getElementById('bookList');
+  document.getElementById('readingListView').style.display = 'block';
+  document.getElementById('readingDetailView').style.display = 'none';
+
   if (books.length === 0) {
     list.innerHTML = '<div class="empty"><div class="icon">📚</div><p>还没有添加书籍</p><p style="font-size:13px;color:var(--text-secondary)">点击右上角"添加书籍"开始</p></div>';
     return;
   }
   list.innerHTML = books.map(b => {
     const pct = Math.round(b.current / b.total * 100);
+    const statusBadge = b.finished ? '<span style="font-size:11px;color:var(--accent2);font-weight:700;">✅ 已读完</span>' :
+      (b.current > 0 ? `<span style="font-size:11px;color:var(--accent3);font-weight:700;">📖 阅读中 ${pct}%</span>` : '<span style="font-size:11px;color:var(--text-secondary);">📌 未开始</span>');
     return `
-    <div class="book-item">
+    <div class="book-item" onclick="openBookDetail(${b.id})" style="cursor:pointer;">
       <div class="book-cover">${b.cover}</div>
       <div class="book-info">
-        <div class="book-title">${b.title}</div>
+        <div class="book-title">${b.title} ${statusBadge}</div>
         <div class="book-author">${b.author}</div>
         <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
         <div class="progress-text">${b.current} / ${b.total} 页 (${pct}%)</div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">📝 ${b.notes || '暂无笔记'}</div>
-        <div style="margin-top:8px;display:flex;gap:6px;">
-          <button class="btn btn-outline btn-sm" onclick="updateBookProgress(${b.id})">更新进度</button>
-          <button class="btn btn-outline btn-sm" onclick="editBookNote(${b.id})">编辑笔记</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteBook(${b.id})">删除</button>
-        </div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">📝 ${b.notes.length} 篇笔记</div>
       </div>
     </div>`;
   }).join('');
+}
+
+function openBookDetail(id) {
+  const b = books.find(bk => bk.id === id);
+  if (!b) return;
+  document.getElementById('readingListView').style.display = 'none';
+  const view = document.getElementById('readingDetailView');
+  view.style.display = 'block';
+
+  const pct = Math.round(b.current / b.total * 100);
+  const notesHtml = b.notes.length === 0
+    ? '<p style="color:var(--text-secondary);font-size:13px;text-align:center;padding:20px;">暂无笔记，点击下方添加</p>'
+    : b.notes.slice().reverse().map(n => `
+      <div class="book-note-item">
+        <div class="note-date">📅 ${n.date}</div>
+        <div class="note-text">${n.text}</div>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteBookNote(${b.id},'${n.date}')" style="margin-top:6px;">删除</button>
+      </div>
+    `).join('');
+
+  view.innerHTML = `
+    <div class="book-detail-back">
+      <button class="btn btn-outline btn-sm" onclick="renderBooks()">← 返回书架</button>
+    </div>
+    <div class="book-detail-header">
+      <div class="book-detail-cover">${b.cover}</div>
+      <div class="book-detail-info">
+        <h2>${b.title}</h2>
+        <div class="author">${b.author}</div>
+        <div class="finished-badge ${b.finished ? 'done' : 'reading'}">${b.finished ? '✅ 已读完' : '📖 阅读中'}</div>
+        <div class="progress-bar" style="margin:8px 0;"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div class="progress-text">${b.current} / ${b.total} 页 (${pct}%)</div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" onclick="updateBookProgress(${b.id})">📊 更新进度</button>
+          ${b.finished
+            ? '<button class="btn btn-outline btn-sm" onclick="toggleBookFinished(' + b.id + ')">📖 标记为未读完</button>'
+            : '<button class="btn btn-success btn-sm" onclick="toggleBookFinished(' + b.id + ')">✅ 标记已读完</button>'}
+          <button class="btn btn-danger btn-sm" onclick="deleteBook(${b.id})">🗑 删除</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><span class="icon">📝</span>读书笔记 (${b.notes.length}篇)</span>
+      </div>
+      ${notesHtml}
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <textarea id="newBookNote" placeholder="写读书笔记..." style="flex:1;min-height:60px;"></textarea>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="addBookNote(${b.id})" style="margin-top:8px;">💾 保存笔记</button>
+    </div>
+  `;
+}
+
+function addBookNote(id) {
+  const textarea = document.getElementById('newBookNote');
+  const text = textarea.value.trim();
+  if (!text) return toast('请输入笔记内容');
+  const b = books.find(bk => bk.id === id);
+  if (!b) return;
+  b.notes.push({ date: new Date().toISOString().slice(0, 10), text });
+  DB.set('books', books);
+  openBookDetail(id);
+  toast('笔记已保存 ✓');
+}
+
+function deleteBookNote(bookId, noteDate) {
+  const b = books.find(bk => bk.id === bookId);
+  if (!b) return;
+  b.notes = b.notes.filter(n => n.date !== noteDate);
+  DB.set('books', books);
+  openBookDetail(bookId);
+  toast('笔记已删除');
+}
+
+function toggleBookFinished(id) {
+  const b = books.find(bk => bk.id === id);
+  if (!b) return;
+  b.finished = !b.finished;
+  if (b.finished) b.current = b.total;
+  DB.set('books', books);
+  openBookDetail(id);
+  toast(b.finished ? '🎉 已标记为读完！' : '已标记为未读完');
 }
 
 function showAddBook() {
@@ -1450,9 +1634,10 @@ function showAddBook() {
   const author = prompt('作者：');
   if (!author) return;
   const total = parseInt(prompt('总页数：')) || 0;
+  if (!total) return toast('请填写总页数');
   const id = Date.now();
   const covers = ['📘', '📙', '📗', '📕', '📓'];
-  books.push({ id, title, author, cover: covers[Math.floor(Math.random() * covers.length)], total, current: 0, notes: '' });
+  books.push({ id, title, author, cover: covers[Math.floor(Math.random() * covers.length)], total, current: 0, finished: false, notes: [] });
   DB.set('books', books);
   renderBooks();
   toast('书籍已添加 ✓');
@@ -1464,24 +1649,14 @@ function updateBookProgress(id) {
   const val = parseInt(prompt(`当前阅读页数 (共 ${book.total} 页)：`, book.current));
   if (isNaN(val) || val < 0 || val > book.total) return;
   book.current = val;
+  if (val >= book.total) book.finished = true;
   DB.set('books', books);
-  renderBooks();
+  openBookDetail(id);
   toast('进度已更新 ✓');
 }
 
-function editBookNote(id) {
-  const book = books.find(b => b.id === id);
-  if (!book) return;
-  const note = prompt('读书笔记：', book.notes);
-  if (note === null) return;
-  book.notes = note;
-  DB.set('books', books);
-  renderBooks();
-  toast('笔记已保存 ✓');
-}
-
 function deleteBook(id) {
-  if (!confirm('确定删除这本书？')) return;
+  if (!confirm('确定删除这本书？所有笔记也会被删除。')) return;
   books = books.filter(b => b.id !== id);
   DB.set('books', books);
   renderBooks();
