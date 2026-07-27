@@ -1531,15 +1531,20 @@ function renderBooks() {
     const pct = Math.round(b.current / b.total * 100);
     const statusBadge = b.finished ? '<span style="font-size:11px;color:var(--accent2);font-weight:700;">✅ 已读完</span>' :
       (b.current > 0 ? `<span style="font-size:11px;color:var(--accent3);font-weight:700;">📖 阅读中 ${pct}%</span>` : '<span style="font-size:11px;color:var(--text-secondary);">📌 未开始</span>');
+    const clickAction = b.link ? `window.open('${b.link}', '_blank')` : `openBookDetail(${b.id})`;
     return `
-    <div class="book-item" onclick="openBookDetail(${b.id})" style="cursor:pointer;">
-      <div class="book-cover">${b.cover}</div>
+    <div class="book-item" style="cursor:pointer;">
+      <div class="book-cover" onclick="${clickAction}" title="${b.link ? '点击跳转微信读书' : '点击查看详情'}">${b.cover}</div>
       <div class="book-info">
-        <div class="book-title">${b.title} ${statusBadge}</div>
+        <div class="book-title" style="display:flex;align-items:center;gap:8px;">
+          <span onclick="${clickAction}" style="cursor:pointer;" title="${b.link ? '点击跳转微信读书' : ''}">${b.title}</span>
+          ${statusBadge}
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();openBookDetail(${b.id})" style="margin-left:auto;font-size:11px;padding:2px 8px;">📋</button>
+        </div>
         <div class="book-author">${b.author}</div>
         <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
         <div class="progress-text">${b.current} / ${b.total} 页 (${pct}%)</div>
-        <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">📝 ${b.notes.length} 篇笔记</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">📝 ${b.notes.length} 篇笔记 ${b.link ? '🔗 有链接' : ''}</div>
       </div>
     </div>`;
   }).join('');
