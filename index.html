@@ -495,6 +495,70 @@ textarea { min-height: 80px; }
 .copy-btn:hover { background: var(--accent3); color: #fff; }
 .copy-btn.copied { background: var(--accent2); border-color: var(--accent2); color: #fff; }
 
+/* Speech & Recording */
+.speak-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--accent4);
+  background: transparent;
+  color: var(--accent4);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+.speak-btn:hover { background: var(--accent4); color: #fff; }
+.speak-btn.speaking { background: var(--accent4); color: #fff; animation: pulse 0.8s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+
+.record-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+.record-btn:hover { background: var(--accent); color: #fff; }
+.record-btn.recording { background: #e74c3c; border-color: #e74c3c; color: #fff; animation: pulse 0.6s infinite; }
+
+.play-original-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--accent3);
+  background: transparent;
+  color: var(--accent3);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+.play-original-btn:hover { background: var(--accent3); color: #fff; }
+
+.compare-result {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f8f9fa;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.compare-result .match-high { color: var(--accent2); font-weight: 700; }
+.compare-result .match-mid { color: var(--accent3); font-weight: 700; }
+.compare-result .match-low { color: var(--accent); font-weight: 700; }
+
 @media (max-width: 768px) {
   .grid2, .grid3 { grid-template-columns: 1fr; }
   .sidebar { width: 56px; }
@@ -544,14 +608,19 @@ textarea { min-height: 80px; }
                 <span class="card-title"><span class="icon">🎯</span>今日单词</span>
                 <span id="wordProgress" style="font-size:13px;color:var(--text-secondary)"></span>
               </div>
-              <div class="word-card" id="wordCard" onclick="flipWord()">
+              <div class="word-card" id="wordCard">
                 <div class="word" id="wordText">initiative</div>
                 <div class="phonetic" id="wordPhonetic">/ɪˈnɪʃətɪv/</div>
-                <div class="meaning" id="wordMeaning">n. 主动性，倡议</div>
-                <div class="example" id="wordExample">"She took the initiative to organize the meeting."</div>
-                <div class="hint">👆 点击翻转查看释义</div>
+                <div class="meaning" id="wordMeaning" onclick="flipWord()" style="cursor:pointer">👆 点击翻转查看释义</div>
+                <div class="example" id="wordExample"></div>
               </div>
-              <div style="display:flex;gap:10px;margin-top:12px;">
+              <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+                <button class="speak-btn" id="wordSpeakBtn" onclick="speakWord()">🔊 发音</button>
+                <button class="speak-btn" onclick="speakWordSlow()">🐢 慢速</button>
+                <button class="record-btn" id="wordRecordBtn" onclick="recordWord()">🎤 跟读</button>
+              </div>
+              <div id="wordRecordResult" style="margin-top:8px;"></div>
+              <div style="display:flex;gap:10px;margin-top:10px;">
                 <button class="btn btn-outline btn-sm" onclick="prevWord()">⬅ 上一个</button>
                 <button class="btn btn-outline btn-sm" onclick="nextWord()">下一个 ➡</button>
                 <button class="btn btn-success btn-sm" onclick="markWordLearned()" style="margin-left:auto">✓ 已掌握</button>
@@ -595,10 +664,29 @@ textarea { min-height: 80px; }
           <div class="card-header"><span class="card-title"><span class="icon">🎧</span>听力训练材料</span></div>
           <div id="listeningList"></div>
         </div>
+        <div class="card" id="listenDetailCard" style="display:none;">
+          <div class="card-header">
+            <span class="card-title"><span class="icon">📖</span><span id="listenDetailTitle">材料详情</span></span>
+            <button class="btn btn-outline btn-sm" onclick="closeListenDetail()">✕ 关闭</button>
+          </div>
+          <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="play-original-btn" id="playFullBtn" onclick="playFullText()">▶ 播放全文</button>
+            <button class="play-original-btn" onclick="playFullTextSlow()">🐢 慢速播放</button>
+          </div>
+          <div id="listenSentences" style="margin-bottom:12px;"></div>
+          <div class="card" style="background:#f8f9fa;margin-top:12px;">
+            <div class="card-header"><span class="card-title"><span class="icon">🎤</span>跟读练习</span></div>
+            <div id="listenSpeakArea">
+              <p style="font-size:13px;color:var(--text-secondary);">点击上面任意一句，然后点"开始跟读"练习发音</p>
+            </div>
+            <button class="record-btn" id="listenRecordBtn" onclick="recordListenSentence()" style="margin-top:8px;">🎤 开始跟读</button>
+            <div id="listenRecordResult" style="margin-top:8px;"></div>
+          </div>
+        </div>
         <div class="card">
           <div class="card-header"><span class="card-title"><span class="icon">✏️</span>听写练习</span></div>
           <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">
-            播放一段音频后，在下方写下你听到的内容，然后点击"核对"对比原文。
+            先播放材料，在下方写下你听到的内容，然后点击"核对"对比原文。
           </p>
           <textarea id="dictationInput" placeholder="写下你听到的内容..."></textarea>
           <div style="display:flex;gap:10px;margin-top:10px;">
@@ -999,9 +1087,9 @@ function renderWord() {
   document.getElementById('wordPhonetic').textContent = '';
   document.getElementById('wordMeaning').textContent = '👆 点击翻转查看释义';
   document.getElementById('wordExample').textContent = '';
-  document.getElementById('wordCard').style.transform = '';
   wordFlipped = false;
   document.getElementById('wordProgress').textContent = `${wordIndex + 1} / ${words.length}`;
+  document.getElementById('wordRecordResult').innerHTML = '';
   updateWordStats();
 }
 
@@ -1017,6 +1105,166 @@ function flipWord() {
     document.getElementById('wordExample').textContent = '';
     wordFlipped = false;
   }
+}
+
+// ---- 单词发音 ----
+function speakWord() { speakText(words[wordIndex].en, 1); }
+function speakWordSlow() { speakText(words[wordIndex].en, 0.7); }
+
+function speakText(text, rate = 1) {
+  if (!('speechSynthesis' in window)) return toast('浏览器不支持语音合成');
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = rate;
+  u.pitch = 1;
+  // Try to pick a good English voice
+  const voices = speechSynthesis.getVoices();
+  const enVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Female')) ||
+                  voices.find(v => v.lang.startsWith('en-US')) ||
+                  voices.find(v => v.lang.startsWith('en'));
+  if (enVoice) u.voice = enVoice;
+  const btn = document.getElementById('wordSpeakBtn');
+  if (btn) { btn.classList.add('speaking'); setTimeout(() => btn.classList.remove('speaking'), 1500); }
+  speechSynthesis.speak(u);
+}
+
+// ---- 单词跟读 ----
+let mediaRecorder = null;
+let audioChunks = [];
+let recordingTarget = null; // 'word' or 'listen'
+
+async function recordWord() {
+  recordingTarget = 'word';
+  await startRecording();
+}
+
+async function startRecording() {
+  if (!('MediaRecorder' in window)) return toast('浏览器不支持录音，请用最新版 Chrome 或 Safari');
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      if (recordingTarget === 'word') finishWordRecording(audioUrl);
+      else if (recordingTarget === 'listen') finishListenRecording(audioUrl);
+      stream.getTracks().forEach(t => t.stop());
+    };
+    mediaRecorder.start();
+    if (recordingTarget === 'word') {
+      const btn = document.getElementById('wordRecordBtn');
+      btn.textContent = '⏹ 停止录音';
+      btn.classList.add('recording');
+    } else if (recordingTarget === 'listen') {
+      const btn = document.getElementById('listenRecordBtn');
+      btn.textContent = '⏹ 停止录音';
+      btn.classList.add('recording');
+    }
+    // Auto-stop after 10 seconds
+    setTimeout(() => { if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop(); }, 10000);
+  } catch (e) {
+    toast('无法访问麦克风，请允许麦克风权限');
+  }
+}
+
+function finishWordRecording(audioUrl) {
+  const btn = document.getElementById('wordRecordBtn');
+  btn.textContent = '🎤 跟读';
+  btn.classList.remove('recording');
+  const w = words[wordIndex];
+  document.getElementById('wordRecordResult').innerHTML = `
+    <div class="compare-result">
+      <div style="font-weight:700;margin-bottom:6px;">🔊 你的录音：</div>
+      <audio controls src="${audioUrl}" style="width:100%;height:36px;"></audio>
+      <div style="margin-top:8px;font-size:12px;color:var(--text-secondary);">
+        📝 标准发音：<b>${w.en}</b>
+        <button class="btn btn-outline btn-sm" onclick="speakWord()" style="margin-left:8px;">🔊 听标准音</button>
+      </div>
+      <div style="margin-top:6px;font-size:12px;color:var(--text-secondary);">
+        💡 对比自己的录音和标准发音，多练几次效果更好！
+      </div>
+    </div>`;
+}
+
+// ---- 听力材料 ----
+function selectListening(i) {
+  currentListening = i;
+  const m = listeningMaterials[i];
+  document.getElementById('dictationInput').value = '';
+  document.getElementById('dictationResult').innerHTML = '';
+
+  // Show detail card
+  const card = document.getElementById('listenDetailCard');
+  card.style.display = 'block';
+  document.getElementById('listenDetailTitle').textContent = m.title;
+
+  // Split text into sentences
+  const sentences = m.text.split(/(?<=[.!?])\s+/);
+  document.getElementById('listenSentences').innerHTML = sentences.map((s, si) => `
+    <div class="listen-sentence" style="padding:8px 12px;margin-bottom:4px;border-radius:8px;cursor:pointer;transition:0.2s;border:1px solid transparent;"
+         onclick="selectListenSentence(${si}, this)" data-si="${si}">
+      <span style="font-size:13px;">${s}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('listenSpeakArea').innerHTML = '<p style="font-size:13px;color:var(--text-secondary);">点击上面任意一句选中，再点"开始跟读"练习发音</p>';
+  document.getElementById('listenRecordResult').innerHTML = '';
+
+  toast(`已选择: ${m.title}`);
+}
+
+let selectedListenSentence = -1;
+function selectListenSentence(si, el) {
+  selectedListenSentence = si;
+  document.querySelectorAll('.listen-sentence').forEach(s => { s.style.borderColor = 'transparent'; s.style.background = 'transparent'; });
+  el.style.borderColor = 'var(--accent3)';
+  el.style.background = '#f0f6ff';
+  const sentences = listeningMaterials[currentListening].text.split(/(?<=[.!?])\s+/);
+  document.getElementById('listenSpeakArea').innerHTML = `
+    <div style="font-size:14px;font-weight:600;margin-bottom:6px;">📖 选中句子：</div>
+    <div style="font-size:15px;padding:10px;background:#fff;border-radius:8px;border:1px solid var(--border);">${sentences[si]}</div>
+  `;
+}
+
+function playFullText() {
+  speakText(listeningMaterials[currentListening].text, 0.9);
+}
+function playFullTextSlow() {
+  speakText(listeningMaterials[currentListening].text, 0.65);
+}
+
+function recordListenSentence() {
+  if (selectedListenSentence < 0) return toast('请先点击选择一句');
+  recordingTarget = 'listen';
+  startRecording();
+}
+
+function finishListenRecording(audioUrl) {
+  const btn = document.getElementById('listenRecordBtn');
+  btn.textContent = '🎤 开始跟读';
+  btn.classList.remove('recording');
+  const sentences = listeningMaterials[currentListening].text.split(/(?<=[.!?])\s+/);
+  const original = sentences[selectedListenSentence];
+  document.getElementById('listenRecordResult').innerHTML = `
+    <div class="compare-result">
+      <div style="font-weight:700;margin-bottom:6px;">🔊 你的跟读录音：</div>
+      <audio controls src="${audioUrl}" style="width:100%;height:36px;"></audio>
+      <div style="margin-top:8px;font-size:12px;color:var(--text-secondary);">
+        📝 原句：<b>${original}</b>
+        <button class="btn btn-outline btn-sm" onclick="speakText('${original.replace(/'/g, "\\'")}', 0.9)" style="margin-left:8px;">🔊 播放原句</button>
+      </div>
+      <div style="margin-top:6px;font-size:12px;color:var(--text-secondary);">
+        💡 反复听原句和自己的录音，对比发音和语调！
+      </div>
+    </div>`;
+}
+
+function closeListenDetail() {
+  document.getElementById('listenDetailCard').style.display = 'none';
+  selectedListenSentence = -1;
 }
 
 function nextWord() { wordIndex = (wordIndex + 1) % (words.length || 1); DB.set('wordIndex', wordIndex); renderWord(); }
@@ -1130,13 +1378,6 @@ function renderListening() {
   `).join('');
 }
 let currentListening = 0;
-
-function selectListening(i) {
-  currentListening = i;
-  document.getElementById('dictationInput').value = '';
-  document.getElementById('dictationResult').innerHTML = '';
-  toast(`已选择: ${listeningMaterials[i].title}`);
-}
 
 function showDictationAnswer() {
   document.getElementById('dictationResult').innerHTML = `
